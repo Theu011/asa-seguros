@@ -274,7 +274,13 @@ function EmptyState({ query }: { query: string }) {
 export default function SegurosPage() {
   const [typeFilter, setTypeFilter] = useState<PolicyType | 'todos'>('todos');
   const [statusFilter, setStatusFilter] = useState<PolicyStatus | 'todos'>('todos');
+  const [insurerFilter, setInsurerFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const insurerOptions = useMemo(() => {
+    const unique = Array.from(new Set(mockPolicies.map((p) => p.insurer))).sort();
+    return [{ value: 'todos', label: 'Todas' }, ...unique.map((v) => ({ value: v, label: v }))];
+  }, []);
 
   const typeOptions: { value: PolicyType | 'todos'; label: string }[] = [
     { value: 'todos', label: 'Todos os tipos' },
@@ -298,6 +304,7 @@ export default function SegurosPage() {
     return mockPolicies.filter((p) => {
       if (typeFilter !== 'todos' && p.type !== typeFilter) return false;
       if (statusFilter !== 'todos' && p.status !== statusFilter) return false;
+      if (insurerFilter !== 'todos' && p.insurer !== insurerFilter) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         if (
@@ -323,7 +330,7 @@ export default function SegurosPage() {
   }, []);
 
   const hasActiveFilters =
-    typeFilter !== 'todos' || statusFilter !== 'todos' || searchQuery !== '';
+    typeFilter !== 'todos' || statusFilter !== 'todos' || insurerFilter !== 'todos' || searchQuery !== '';
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -454,7 +461,7 @@ export default function SegurosPage() {
         </div>
 
         {/* Status filters */}
-        <div>
+        <div className="mb-2.5">
           <p
             className="text-[10px] font-bold uppercase tracking-widest mb-2"
             style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
@@ -473,12 +480,33 @@ export default function SegurosPage() {
           </div>
         </div>
 
+        {/* Insurer filters */}
+        <div>
+          <p
+            className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
+          >
+            Seguradora
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {insurerOptions.map(({ value, label }) => (
+              <FilterPill
+                key={value}
+                label={label}
+                active={insurerFilter === value}
+                onClick={() => setInsurerFilter(value)}
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Clear filters */}
         {hasActiveFilters && (
           <button
             onClick={() => {
               setTypeFilter('todos');
               setStatusFilter('todos');
+              setInsurerFilter('todos');
               setSearchQuery('');
             }}
             className="mt-3 text-xs font-semibold transition-colors"
