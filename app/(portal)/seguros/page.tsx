@@ -335,26 +335,28 @@ export default function SegurosPage() {
         }}
       >
         {/* Decorative rings */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full"
-          style={{ border: '28px solid rgba(255,255,255,0.04)' }} />
-        <div className="pointer-events-none absolute right-20 -bottom-10 h-28 w-28 rounded-full"
-          style={{ border: '18px solid rgba(255,255,255,0.03)' }} />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full"
+          style={{ border: '36px solid rgba(255,255,255,0.04)' }} />
+        <div className="pointer-events-none absolute right-24 -bottom-12 h-36 w-36 rounded-full"
+          style={{ border: '22px solid rgba(255,255,255,0.03)' }} />
+        <div className="pointer-events-none absolute left-1/3 -bottom-6 h-32 w-32 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
 
-        <div className="relative p-6 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="relative px-8 py-10 sm:px-12 sm:py-12">
+          <div className="flex flex-wrap items-center justify-between gap-6">
             {/* Title */}
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2"
-                style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3"
+                style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
                 Portal do Cliente
               </p>
               <h1
-                className="text-2xl sm:text-3xl font-bold leading-none"
+                className="text-3xl sm:text-4xl font-bold leading-none"
                 style={{ color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.03em' }}
               >
                 Meus Seguros
               </h1>
-              <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+              <p className="mt-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-inter, Inter, sans-serif)', lineHeight: 1.6 }}>
                 {stats.ativos} apólice{stats.ativos !== 1 ? 's' : ''} ativa{stats.ativos !== 1 ? 's' : ''}
                 {stats.emRenovacao > 0 && (
                   <span style={{ color: '#fbbf24' }}> · {stats.emRenovacao} em renovação</span>
