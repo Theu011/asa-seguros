@@ -342,7 +342,7 @@ export default function SegurosPage() {
         <div className="pointer-events-none absolute left-1/3 -bottom-6 h-32 w-32 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
 
-        <div className="relative px-8 py-10 sm:px-12 sm:py-12">
+        <div className="relative px-10 py-12 sm:px-16 sm:py-14">
           <div className="flex flex-wrap items-center justify-between gap-6">
             {/* Title */}
             <div>
