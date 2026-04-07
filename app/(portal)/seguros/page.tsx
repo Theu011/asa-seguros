@@ -450,22 +450,43 @@ export default function SegurosPage() {
 
         <button
           onClick={() => setShowFilters((v) => !v)}
-          className="relative inline-flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-150"
+          className="relative inline-flex items-center gap-2.5 rounded-2xl px-6 py-4 font-semibold transition-all duration-150"
           style={{
-            background: showFilters ? 'var(--asa)' : 'white',
-            color: showFilters ? '#fff' : '#475569',
-            border: showFilters ? '1px solid var(--asa)' : '1px solid #e2e8f0',
-            boxShadow: showFilters ? '0 4px 12px rgba(37,99,235,0.28)' : '0 2px 8px rgba(15,31,69,0.06)',
+            fontSize: 14,
+            background: showFilters
+              ? 'linear-gradient(135deg, #1a3470 0%, #2563EB 100%)'
+              : 'white',
+            color: showFilters ? '#fff' : '#334155',
+            border: showFilters ? '1px solid transparent' : '1px solid #e2e8f0',
+            boxShadow: showFilters
+              ? '0 4px 16px rgba(37,99,235,0.35)'
+              : '0 2px 8px rgba(15,31,69,0.06)',
             fontFamily: 'var(--font-sora, Sora, sans-serif)',
             whiteSpace: 'nowrap',
+            letterSpacing: '-0.01em',
+          }}
+          onMouseEnter={(e) => {
+            if (!showFilters) {
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.25)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--asa)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!showFilters) {
+              (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0';
+              (e.currentTarget as HTMLElement).style.color = '#334155';
+            }
           }}
         >
-          <SlidersHorizontal className="h-[18px] w-[18px]" />
+          <SlidersHorizontal className="h-[17px] w-[17px] shrink-0" />
           <span className="hidden sm:inline">Filtros</span>
           {activeFilterCount > 0 && (
             <span
-              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
-              style={{ background: showFilters ? '#fff' : 'var(--asa)', color: showFilters ? 'var(--asa)' : '#fff' }}
+              className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold"
+              style={{
+                background: showFilters ? 'rgba(255,255,255,0.25)' : 'rgba(37,99,235,0.10)',
+                color: showFilters ? '#fff' : 'var(--asa)',
+              }}
             >
               {activeFilterCount}
             </span>
