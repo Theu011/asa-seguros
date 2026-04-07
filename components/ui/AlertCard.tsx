@@ -11,64 +11,100 @@ interface AlertCardProps {
 
 const variantConfig: Record<
   AlertVariant,
-  { bg: string; border: string; icon: React.ReactNode; barColor: string }
+  { iconBg: string; iconBorder: string; iconColor: string; icon: React.ElementType; dotColor: string }
 > = {
   urgent: {
-    bg: 'rgba(239,68,68,0.05)',
-    border: 'rgba(239,68,68,0.2)',
-    barColor: '#ef4444',
-    icon: <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#ef4444' }} />,
+    iconBg: 'rgba(239,68,68,0.08)',
+    iconBorder: 'rgba(239,68,68,0.20)',
+    iconColor: '#ef4444',
+    icon: AlertTriangle,
+    dotColor: '#ef4444',
   },
   warning: {
-    bg: 'rgba(245,158,11,0.05)',
-    border: 'rgba(245,158,11,0.2)',
-    barColor: '#F6A800',
-    icon: <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#D97706' }} />,
+    iconBg: 'rgba(245,158,11,0.08)',
+    iconBorder: 'rgba(245,158,11,0.20)',
+    iconColor: '#D97706',
+    icon: AlertTriangle,
+    dotColor: '#F6A800',
   },
   info: {
-    bg: 'rgba(37,99,235,0.04)',
-    border: 'rgba(37,99,235,0.15)',
-    barColor: '#2563EB',
-    icon: <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#2563EB' }} />,
+    iconBg: 'rgba(37,99,235,0.08)',
+    iconBorder: 'rgba(37,99,235,0.18)',
+    iconColor: '#2563EB',
+    icon: Info,
+    dotColor: '#2563EB',
   },
   success: {
-    bg: 'rgba(16,185,129,0.05)',
-    border: 'rgba(16,185,129,0.2)',
-    barColor: '#10b981',
-    icon: <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#10b981' }} />,
+    iconBg: 'rgba(16,185,129,0.08)',
+    iconBorder: 'rgba(16,185,129,0.20)',
+    iconColor: '#059669',
+    icon: CheckCircle2,
+    dotColor: '#10b981',
   },
 };
 
 export function AlertCard({ variant = 'info', title, description, action }: AlertCardProps) {
   const cfg = variantConfig[variant];
+  const Icon = cfg.icon;
+
   return (
     <div
-      className="relative flex gap-3 rounded-2xl overflow-hidden p-4"
       style={{
-        background: cfg.bg,
-        border: `1px solid ${cfg.border}`,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 14,
+        background: variant === 'urgent' ? 'rgba(239,68,68,0.05)' : variant === 'warning' ? 'rgba(245,158,11,0.05)' : '#ffffff',
+        border: variant === 'urgent' ? '1px solid rgba(239,68,68,0.18)' : variant === 'warning' ? '1px solid rgba(245,158,11,0.18)' : '1px solid #e2e8f0',
+        borderRadius: 14,
+        padding: '16px 20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
-      {/* Left accent bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-        style={{ background: cfg.barColor }}
-      />
-      <div className="pl-1">{cfg.icon}</div>
-      <div className="flex-1 min-w-0">
-        <p
-          className="text-sm font-semibold"
-          style={{
-            color: 'var(--c900)',
+      {/* Icon box — same pattern as PolicyCard / StatCard */}
+      <div style={{
+        flexShrink: 0,
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        background: cfg.iconBg,
+        border: `1.5px solid ${cfg.iconBorder}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <Icon style={{ width: 17, height: 17, color: cfg.iconColor }} />
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <p style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: '#0f172a',
             fontFamily: 'var(--font-sora, Sora, sans-serif)',
-          }}
-        >
-          {title}
-        </p>
-        <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--c600)' }}>
+            letterSpacing: '-0.01em',
+          }}>
+            {title}
+          </p>
+          {/* Status dot */}
+          <span style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: cfg.dotColor,
+            flexShrink: 0,
+          }} />
+        </div>
+        <p style={{
+          fontSize: 13,
+          color: '#64748b',
+          lineHeight: 1.6,
+          fontFamily: 'var(--font-inter, Inter, sans-serif)',
+        }}>
           {description}
         </p>
-        {action && <div className="mt-3">{action}</div>}
+        {action && <div style={{ marginTop: 10 }}>{action}</div>}
       </div>
     </div>
   );
