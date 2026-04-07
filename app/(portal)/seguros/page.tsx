@@ -84,15 +84,35 @@ function PolicyRow({ policy }: { policy: Policy }) {
   const expired = isExpired(policy.endDate);
   const expiringSoon = !expired && days <= 45;
 
-  let expiryColor = 'var(--c500)';
-  let expiryLabel = `Vence ${formatDate(policy.endDate)}`;
+  let expiryColor = 'var(--c600)';
+  let expiryLabel = `${formatDate(policy.startDate)} – ${formatDate(policy.endDate)}`;
   if (expired) {
     expiryColor = '#DC2626';
-    expiryLabel = `Venceu ${formatDate(policy.endDate)}`;
   } else if (expiringSoon) {
     expiryColor = days <= 15 ? '#DC2626' : '#D97706';
-    expiryLabel = `Vence em ${days} dias`;
   }
+
+  const statItems = [
+    {
+      label: 'Prêmio anual',
+      value: formatCurrency(policy.premium),
+      valueStyle: { color: 'var(--c900)', fontWeight: 700 },
+    },
+    {
+      label: 'Vigência',
+      value: expiryLabel,
+      valueStyle: { color: expiryColor, fontWeight: 500 },
+      icon: <Calendar className="h-3 w-3 shrink-0" style={{ color: expiryColor }} />,
+    },
+    ...(policy.deductible
+      ? [{ label: 'Franquia', value: formatCurrency(policy.deductible), valueStyle: { color: 'var(--c600)', fontWeight: 500 } }]
+      : []),
+    {
+      label: 'Coberturas',
+      value: `${policy.coverages.length} itens`,
+      valueStyle: { color: 'var(--c600)', fontWeight: 500 },
+    },
+  ];
 
   return (
     <Link
@@ -114,137 +134,91 @@ function PolicyRow({ policy }: { policy: Policy }) {
       }}
     >
       {/* Top accent strip */}
-      <div
-        className="h-1 rounded-t-2xl"
-        style={{ background: accent.color, opacity: 0.6 }}
-      />
+      <div className="h-[3px] rounded-t-2xl" style={{ background: accent.color }} />
 
-      <div className="p-5">
-        <div className="flex items-start gap-4">
-          {/* Icon */}
+      <div className="p-5 pb-4">
+        {/* ── Header row: icon + title + arrow ── */}
+        <div className="flex items-center gap-4">
           <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
             style={{ background: accent.bg, border: `1.5px solid ${accent.border}` }}
           >
-            <Icon className="h-6 w-6" style={{ color: accent.color }} />
+            <Icon className="h-5 w-5" style={{ color: accent.color }} />
           </div>
 
-          {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Title row */}
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="text-base font-bold"
-                style={{
-                  color: 'var(--c900)',
-                  fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                }}
+                className="text-[15px] font-bold leading-tight"
+                style={{ color: 'var(--c900)', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em' }}
               >
                 {policyTypeLabel[policy.type]}
               </span>
-              {/* Status badge */}
               <span
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                style={{
-                  background: st.bg,
-                  color: st.color,
-                  fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                }}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                style={{ background: st.bg, color: st.color, fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
               >
                 {st.icon}
                 {policyStatusLabel[policy.status]}
               </span>
             </div>
-
-            {/* Meta */}
-            <p className="mt-0.5 text-sm" style={{ color: 'var(--c600)' }}>
-              {policy.insurer}
+            <p className="text-xs mt-0.5" style={{ color: 'var(--c500)', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+              {policy.insurer} · <span style={{ color: 'var(--c400, #94a3b8)' }}>#{policy.number}</span>
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--c400, var(--c500))' }}>
-              #{policy.number}
-            </p>
-
-            {/* Stats row */}
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-                  Prêmio anual
-                </p>
-                <p className="text-sm font-bold" style={{ color: 'var(--c900)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-                  {formatCurrency(policy.premium)}
-                </p>
-              </div>
-
-              <div
-                className="w-px h-7 self-center"
-                style={{ background: 'var(--c200)' }}
-              />
-
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-                  Vigência
-                </p>
-                <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: expiryColor }}>
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
-                  {expiryLabel}
-                </p>
-              </div>
-
-              {policy.deductible && (
-                <>
-                  <div
-                    className="w-px h-7 self-center"
-                    style={{ background: 'var(--c200)' }}
-                  />
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-                      Franquia
-                    </p>
-                    <p className="text-sm font-medium" style={{ color: 'var(--c700, var(--c600))' }}>
-                      {formatCurrency(policy.deductible)}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <div
-                className="w-px h-7 self-center"
-                style={{ background: 'var(--c200)' }}
-              />
-
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c500)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-                  Coberturas
-                </p>
-                <p className="text-sm font-medium" style={{ color: 'var(--c600)' }}>
-                  {policy.coverages.length} itens
-                </p>
-              </div>
-            </div>
-
-            {/* Insured item preview */}
-            {policy.insuredItems.length > 0 && (
-              <div
-                className="mt-3 rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: accent.lightBg }}
-              >
-                <Shield className="h-3.5 w-3.5 shrink-0" style={{ color: accent.color }} />
-                <span className="text-xs" style={{ color: 'var(--c600)' }}>
-                  <span className="font-medium" style={{ color: 'var(--c700, var(--c600))' }}>
-                    {policy.insuredItems[0].label}:
-                  </span>{' '}
-                  {policy.insuredItems[0].value}
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* Arrow */}
           <ChevronRight
-            className="h-5 w-5 shrink-0 mt-1 transition-transform duration-150 group-hover:translate-x-0.5"
-            style={{ color: 'var(--c300, var(--c200))' }}
+            className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+            style={{ color: 'var(--c300, #cbd5e1)' }}
           />
         </div>
+
+        {/* ── Stats row ── */}
+        <div
+          className="mt-4 pt-4 flex flex-wrap gap-y-3"
+          style={{ borderTop: '1px solid #f1f5f9' }}
+        >
+          {statItems.map((item, i) => (
+            <div
+              key={item.label}
+              className="flex-1 min-w-[100px]"
+              style={{
+                paddingLeft: i > 0 ? 16 : 0,
+                borderLeft: i > 0 ? '1px solid #e2e8f0' : 'none',
+              }}
+            >
+              <p
+                className="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                style={{ color: 'var(--c400, #94a3b8)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
+              >
+                {item.label}
+              </p>
+              <p
+                className="text-[13px] flex items-center gap-1"
+                style={{ fontFamily: 'var(--font-sora, Sora, sans-serif)', ...item.valueStyle }}
+              >
+                {item.icon}
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Insured item preview ── */}
+        {policy.insuredItems.length > 0 && (
+          <div
+            className="mt-3 rounded-xl px-3 py-2 flex items-center gap-2"
+            style={{ background: accent.lightBg }}
+          >
+            <Shield className="h-3.5 w-3.5 shrink-0" style={{ color: accent.color }} />
+            <span className="text-xs truncate" style={{ color: 'var(--c600)', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+              <span className="font-medium" style={{ color: 'var(--c700, var(--c600))' }}>
+                {policy.insuredItems[0].label}:
+              </span>{' '}
+              {policy.insuredItems[0].value}
+            </span>
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -373,10 +347,7 @@ export default function SegurosPage() {
       </div>
 
       {/* Summary cards */}
-      <div
-        className="grid gap-3 mb-6"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total', value: stats.total, color: '#2563EB', bg: 'rgba(37,99,235,0.08)' },
           { label: 'Ativos', value: stats.ativos, color: '#059669', bg: 'rgba(16,185,129,0.08)' },
@@ -538,7 +509,7 @@ export default function SegurosPage() {
       {filtered.length === 0 ? (
         <EmptyState query={searchQuery} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {filtered.map((policy) => (
             <PolicyRow key={policy.id} policy={policy} />
           ))}
