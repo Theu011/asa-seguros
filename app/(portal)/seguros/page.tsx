@@ -109,49 +109,44 @@ function PolicyCard({ policy }: { policy: Policy }) {
         style={{ background: accent.color }}
       />
 
-      <div className="flex flex-col gap-4 p-5 pl-6 flex-1">
-        {/* ── Top: icon + title + chevron ── */}
+      <div className="p-5 pl-6 flex flex-col gap-3">
+        {/* ── Top: icon + title + status + chevron ── */}
         <div className="flex items-start gap-3">
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl mt-0.5"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
             style={{ background: accent.bg, border: `1.5px solid ${accent.border}` }}
           >
             <Icon className="h-5 w-5" style={{ color: accent.color }} />
           </div>
 
           <div className="flex-1 min-w-0">
-            <p
-              className="text-[15px] font-bold leading-tight"
-              style={{ color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.015em' }}
-            >
-              {policyTypeLabel[policy.type]}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-              {policy.insurer}
-            </p>
-            <p className="text-[11px] mt-0.5 font-mono" style={{ color: '#94a3b8' }}>
-              #{policy.number}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p
+                className="text-[15px] font-bold leading-tight"
+                style={{ color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.015em' }}
+              >
+                {policyTypeLabel[policy.type]}
+              </p>
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                style={{ background: st.bg, color: st.color, fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: st.dot }} />
+                {policyStatusLabel[policy.status]}
+              </span>
+            </div>
+            <p className="text-xs mt-1" style={{ color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+              {policy.insurer} · <span style={{ color: '#94a3b8' }}>#{policy.number}</span>
             </p>
           </div>
 
           <ChevronRight
-            className="h-4 w-4 shrink-0 mt-1 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5"
+            className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5"
           />
         </div>
 
-        {/* ── Status badge ── */}
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            style={{ background: st.bg, color: st.color, fontFamily: 'var(--font-sora, Sora, sans-serif)' }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: st.dot }} />
-            {policyStatusLabel[policy.status]}
-          </span>
-        </div>
-
         {/* ── Stat chips ── */}
-        <div className="flex flex-wrap gap-2 mt-auto">
+        <div className="flex flex-wrap gap-2">
           {/* Premium */}
           <div
             className="inline-flex flex-col rounded-xl px-3 py-1.5"
