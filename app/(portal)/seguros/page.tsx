@@ -414,46 +414,57 @@ export default function SegurosPage() {
       </div>
 
       {/* ── Search + filter toggle ─────────────────────────────────── */}
-      <div className="flex gap-2.5 mb-3">
+      <div className="flex gap-3 mb-4">
         <div
-          className="flex flex-1 items-center gap-2.5 rounded-xl px-3.5 py-2.5 bg-white"
-          style={{ border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+          className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-5 py-4"
+          style={{
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 8px rgba(15,31,69,0.06)',
+          }}
         >
-          <Search className="h-4 w-4 shrink-0" style={{ color: '#94a3b8' }} />
+          <Search className="h-[18px] w-[18px] shrink-0" style={{ color: '#94a3b8' }} />
           <input
             type="text"
             placeholder="Buscar por seguradora, número ou tipo..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm outline-none"
+            className="flex-1 bg-transparent outline-none"
             style={{
+              fontSize: 15,
               color: '#0f172a',
               fontFamily: 'var(--font-inter, Inter, sans-serif)',
             }}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} style={{ color: '#94a3b8' }}>
-              <X className="h-3.5 w-3.5" />
+            <button
+              onClick={() => setSearchQuery('')}
+              className="flex h-6 w-6 items-center justify-center rounded-full transition-colors"
+              style={{ background: '#f1f5f9', color: '#94a3b8' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#e2e8f0'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f1f5f9'; }}
+            >
+              <X className="h-3 w-3" />
             </button>
           )}
         </div>
 
         <button
           onClick={() => setShowFilters((v) => !v)}
-          className="relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150"
+          className="relative inline-flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-150"
           style={{
             background: showFilters ? 'var(--asa)' : 'white',
             color: showFilters ? '#fff' : '#475569',
             border: showFilters ? '1px solid var(--asa)' : '1px solid #e2e8f0',
-            boxShadow: showFilters ? '0 2px 8px rgba(37,99,235,0.25)' : '0 1px 3px rgba(0,0,0,0.04)',
+            boxShadow: showFilters ? '0 4px 12px rgba(37,99,235,0.28)' : '0 2px 8px rgba(15,31,69,0.06)',
             fontFamily: 'var(--font-sora, Sora, sans-serif)',
+            whiteSpace: 'nowrap',
           }}
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-[18px] w-[18px]" />
           <span className="hidden sm:inline">Filtros</span>
           {activeFilterCount > 0 && (
             <span
-              className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
+              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
               style={{ background: showFilters ? '#fff' : 'var(--asa)', color: showFilters ? 'var(--asa)' : '#fff' }}
             >
               {activeFilterCount}
