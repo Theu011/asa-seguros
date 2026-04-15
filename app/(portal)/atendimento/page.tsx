@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Headphones, Mail, Phone, Clock,
   MessageSquarePlus, CheckCircle2, Send,
   X, Upload, ChevronRight, CalendarDays,
-  ExternalLink, Circle, Hash,
+  ExternalLink, Hash, ArrowLeft,
 } from 'lucide-react';
 import { mockBroker, mockMessages } from '@/mock/broker';
 import { mockPolicies } from '@/mock/policies';
 import { formatDate, policyTypeLabel } from '@/lib/utils';
-import type { MessageStatus } from '@/types';
+import type { MessageStatus, Message } from '@/types';
 
 // ── WhatsApp SVG ──────────────────────────────────────────────────
 const WhatsAppSvg = ({ style }: { style?: React.CSSProperties }) => (
@@ -20,7 +20,7 @@ const WhatsAppSvg = ({ style }: { style?: React.CSSProperties }) => (
   </svg>
 );
 
-// ── Message status config ─────────────────────────────────────────
+// ── Status config ─────────────────────────────────────────────────
 const statusConfig: Record<MessageStatus, {
   label: string; color: string; bg: string; border: string; dot: string;
 }> = {
@@ -61,11 +61,7 @@ function NovaMensagemModal({ onClose }: { onClose: () => void }) {
         background: '#fff', borderRadius: 20, width: '100%', maxWidth: 520,
         boxShadow: '0 24px 64px rgba(0,0,0,0.18)', overflow: 'hidden',
       }}>
-        {/* Header */}
-        <div style={{
-          padding: '20px 24px 18px', borderBottom: '1px solid #f1f5f9',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
+        <div style={{ padding: '20px 24px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(37,99,235,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <MessageSquarePlus style={{ width: 18, height: 18, color: '#2563EB' }} />
@@ -79,104 +75,45 @@ function NovaMensagemModal({ onClose }: { onClose: () => void }) {
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{ width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-          >
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X style={{ width: 16, height: 16, color: '#64748b' }} />
           </button>
         </div>
 
         {step === 'form' ? (
           <form onSubmit={handleSubmit} style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Subject */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>
-                Assunto
-              </label>
-              <input
-                required
-                type="text"
-                placeholder="Ex: Dúvida sobre cobertura do seguro auto"
-                value={form.subject}
-                onChange={e => setForm({ ...form, subject: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  border: '1px solid #e2e8f0', background: '#f8fafc', color: '#0f172a',
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none',
-                }}
-              />
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>Assunto</label>
+              <input required type="text" placeholder="Ex: Dúvida sobre cobertura do seguro auto" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#0f172a', fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none' }} />
             </div>
-
-            {/* Policy (optional) */}
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>
                 Apólice relacionada <span style={{ color: '#94a3b8', fontWeight: 400 }}>(opcional)</span>
               </label>
-              <select
-                value={form.policy}
-                onChange={e => setForm({ ...form, policy: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  border: '1px solid #e2e8f0', background: '#f8fafc', color: form.policy ? '#0f172a' : '#94a3b8',
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none',
-                }}
-              >
+              <select value={form.policy} onChange={e => setForm({ ...form, policy: e.target.value })}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13, border: '1px solid #e2e8f0', background: '#f8fafc', color: form.policy ? '#0f172a' : '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none' }}>
                 <option value="">Nenhuma apólice específica</option>
-                {mockPolicies.map(p => (
-                  <option key={p.id} value={p.id}>{p.number} — {policyTypeLabel[p.type]}</option>
-                ))}
+                {mockPolicies.map(p => <option key={p.id} value={p.id}>{p.number} — {policyTypeLabel[p.type]}</option>)}
               </select>
             </div>
-
-            {/* Message */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>
-                Mensagem
-              </label>
-              <textarea
-                required
-                rows={5}
-                placeholder="Escreva sua mensagem aqui..."
-                value={form.message}
-                onChange={e => setForm({ ...form, message: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  border: '1px solid #e2e8f0', background: '#f8fafc', color: '#0f172a',
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none',
-                  resize: 'vertical', lineHeight: 1.6,
-                }}
-              />
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>Mensagem</label>
+              <textarea required rows={5} placeholder="Escreva sua mensagem aqui..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#0f172a', fontFamily: 'var(--font-inter, Inter, sans-serif)', outline: 'none', resize: 'vertical', lineHeight: 1.6 }} />
             </div>
-
-            {/* Attachment mock */}
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-sora, Sora, sans-serif)', display: 'block', marginBottom: 6 }}>
                 Anexos <span style={{ color: '#94a3b8', fontWeight: 400 }}>(opcional)</span>
               </label>
-              <div style={{
-                border: '1.5px dashed #cbd5e1', borderRadius: 10,
-                padding: '14px', textAlign: 'center', background: '#f8fafc', cursor: 'pointer',
-              }}>
+              <div style={{ border: '1.5px dashed #cbd5e1', borderRadius: 10, padding: '14px', textAlign: 'center', background: '#f8fafc', cursor: 'pointer' }}>
                 <Upload style={{ width: 16, height: 16, color: '#94a3b8', margin: '0 auto 4px' }} />
                 <p style={{ fontSize: 12, color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
                   <span style={{ color: '#2563EB', fontWeight: 600 }}>Clique</span> para anexar arquivos
                 </p>
               </div>
             </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              style={{
-                width: '100%', padding: '12px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                background: 'linear-gradient(135deg, #1a3470, #2563EB)',
-                color: '#fff', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: '0 2px 8px rgba(37,99,235,0.30)',
-              }}
-            >
+            <button type="submit" style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: 'linear-gradient(135deg, #1a3470, #2563EB)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 2px 8px rgba(37,99,235,0.30)' }}>
               <Send style={{ width: 15, height: 15 }} />
               Enviar mensagem
             </button>
@@ -186,23 +123,14 @@ function NovaMensagemModal({ onClose }: { onClose: () => void }) {
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(16,185,129,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <CheckCircle2 style={{ width: 28, height: 28, color: '#059669' }} />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', marginBottom: 8, letterSpacing: '-0.02em' }}>
-              Mensagem enviada!
-            </h3>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', marginBottom: 8, letterSpacing: '-0.02em' }}>Mensagem enviada!</h3>
             <p style={{ fontSize: 13, color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)', lineHeight: 1.6, marginBottom: 6 }}>
               {mockBroker.name} receberá sua mensagem e responderá em até <strong>1 dia útil</strong>.
             </p>
             <p style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', marginBottom: 24 }}>
               Protocolo: <span style={{ fontWeight: 600, color: '#475569' }}>ATD-2025-{Date.now().toString().slice(-4)}</span>
             </p>
-            <button
-              onClick={onClose}
-              style={{
-                padding: '10px 28px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', cursor: 'pointer',
-              }}
-            >
+            <button onClick={onClose} style={{ padding: '10px 28px', borderRadius: 10, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
               Fechar
             </button>
           </div>
@@ -212,78 +140,52 @@ function NovaMensagemModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Message row ───────────────────────────────────────────────────
-function MessageRow({ message }: { message: typeof mockMessages[0] }) {
+// ── Message row (inbox list) ──────────────────────────────────────
+function MessageRow({ message, onClick }: { message: Message; onClick: () => void }) {
   const status = statusConfig[message.status];
   const isUnread = message.status === 'respondido';
 
   return (
-    <div
+    <button
+      onClick={onClick}
       style={{
+        width: '100%', textAlign: 'left',
         display: 'flex', gap: 16, padding: '16px 22px',
         borderBottom: '1px solid #f1f5f9',
-        transition: 'background 0.1s',
-        position: 'relative',
+        transition: 'background 0.1s', position: 'relative',
         background: isUnread ? 'rgba(37,99,235,0.015)' : 'transparent',
+        border: 'none', cursor: 'pointer',
+        borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#f1f5f9',
       }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fafbfc'; }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f5f8ff'; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isUnread ? 'rgba(37,99,235,0.015)' : 'transparent'; }}
     >
-      {/* Unread dot */}
       {isUnread && (
-        <div style={{
-          position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-          width: 6, height: 6, borderRadius: '50%', background: '#2563EB',
-        }} />
+        <div style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', width: 6, height: 6, borderRadius: '50%', background: '#2563EB' }} />
       )}
-
-      {/* Broker avatar */}
-      <div style={{
-        flexShrink: 0, width: 40, height: 40, borderRadius: '50%',
-        background: 'linear-gradient(135deg, #1a3470, #2563EB)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
-          TA
-        </span>
+      <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #1a3470, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>TA</span>
       </div>
-
-      {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <p style={{
-              fontSize: 14, fontWeight: isUnread ? 700 : 600, color: '#0f172a',
-              fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
+            <p style={{ fontSize: 14, fontWeight: isUnread ? 700 : 600, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {message.subject}
             </p>
-            <span style={{
-              flexShrink: 0,
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600,
-              fontFamily: 'var(--font-sora, Sora, sans-serif)',
-              background: status.bg, color: status.color, border: `1px solid ${status.border}`,
-            }}>
+            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: status.bg, color: status.color, border: `1px solid ${status.border}` }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: status.dot, flexShrink: 0 }} />
               {status.label}
             </span>
           </div>
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
             <CalendarDays style={{ width: 11, height: 11, color: '#cbd5e1' }} />
-            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-              {formatDate(message.date.split('T')[0])}
-            </span>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>{formatDate(message.date.split('T')[0])}</span>
           </div>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <Hash style={{ width: 10, height: 10, color: '#cbd5e1' }} />
-            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>
-              {message.protocol}
-            </span>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>{message.protocol}</span>
           </div>
           {message.policyId && mockPolicies.find(p => p.id === message.policyId) && (
             <>
@@ -293,19 +195,181 @@ function MessageRow({ message }: { message: typeof mockMessages[0] }) {
               </span>
             </>
           )}
+          <span style={{ color: '#e2e8f0' }}>·</span>
+          <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+            {message.thread.length} mensage{message.thread.length !== 1 ? 'ns' : 'm'}
+          </span>
         </div>
-
-        <p style={{
-          fontSize: 12, color: '#64748b', lineHeight: 1.5,
-          fontFamily: 'var(--font-inter, Inter, sans-serif)',
-          overflow: 'hidden', display: '-webkit-box',
-          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
-        }}>
+        <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, fontFamily: 'var(--font-inter, Inter, sans-serif)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
           {message.preview}
         </p>
       </div>
-
       <ChevronRight style={{ width: 15, height: 15, color: '#cbd5e1', flexShrink: 0, alignSelf: 'center' }} />
+    </button>
+  );
+}
+
+// ── Thread bubble ─────────────────────────────────────────────────
+function ThreadBubble({ turn }: { turn: Message['thread'][0] }) {
+  const isClient = turn.from === 'client';
+  return (
+    <div style={{
+      display: 'flex', gap: 10,
+      flexDirection: isClient ? 'row-reverse' : 'row',
+      alignItems: 'flex-end',
+    }}>
+      {/* Avatar */}
+      <div style={{
+        flexShrink: 0, width: 32, height: 32, borderRadius: '50%',
+        background: isClient
+          ? 'linear-gradient(135deg, #0f172a, #334155)'
+          : 'linear-gradient(135deg, #1a3470, #2563EB)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>
+          {isClient ? 'RF' : 'TA'}
+        </span>
+      </div>
+
+      {/* Bubble */}
+      <div style={{ maxWidth: '72%' }}>
+        <div style={{
+          padding: '11px 14px',
+          borderRadius: isClient ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+          background: isClient ? '#0f172a' : '#fff',
+          border: isClient ? 'none' : '1px solid #e2e8f0',
+          boxShadow: isClient
+            ? '0 2px 8px rgba(15,23,42,0.15)'
+            : '0 1px 3px rgba(0,0,0,0.05)',
+        }}>
+          <p style={{
+            fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre-wrap',
+            color: isClient ? '#f1f5f9' : '#374151',
+            fontFamily: 'var(--font-inter, Inter, sans-serif)',
+          }}>
+            {turn.body}
+          </p>
+        </div>
+        <p style={{
+          fontSize: 10, color: '#94a3b8', marginTop: 4,
+          fontFamily: 'var(--font-inter, Inter, sans-serif)',
+          textAlign: isClient ? 'right' : 'left',
+        }}>
+          {isClient ? 'Você' : mockBroker.name} · {formatDate(turn.date.split('T')[0])}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Thread view ───────────────────────────────────────────────────
+function ThreadView({ message, onBack, onNewMessage }: { message: Message; onBack: () => void; onNewMessage: () => void }) {
+  const status = statusConfig[message.status];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const policyLabel = message.policyId ? mockPolicies.find(p => p.id === message.policyId)?.number : null;
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Thread header */}
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+              borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#475569',
+              background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer',
+              fontFamily: 'var(--font-inter, Inter, sans-serif)',
+              transition: 'background 0.12s', flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f1f5f9'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
+          >
+            <ArrowLeft style={{ width: 13, height: 13 }} />
+            Voltar
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {message.subject}
+            </p>
+          </div>
+          <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: status.bg, color: status.color, border: `1px solid ${status.border}` }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: status.dot, flexShrink: 0 }} />
+            {status.label}
+          </span>
+        </div>
+
+        {/* Meta row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Hash style={{ width: 10, height: 10, color: '#cbd5e1' }} />
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>{message.protocol}</span>
+          </div>
+          {policyLabel && (
+            <>
+              <span style={{ color: '#e2e8f0', fontSize: 11 }}>·</span>
+              <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>{policyLabel}</span>
+            </>
+          )}
+          <span style={{ color: '#e2e8f0', fontSize: 11 }}>·</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <CalendarDays style={{ width: 10, height: 10, color: '#cbd5e1' }} />
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>{formatDate(message.date.split('T')[0])}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bubbles */}
+      <div
+        ref={scrollRef}
+        style={{
+          flex: 1, overflowY: 'auto', padding: '20px 22px',
+          display: 'flex', flexDirection: 'column', gap: 16,
+          background: '#f8fafc',
+        }}
+      >
+        {message.thread.map((turn, i) => (
+          <ThreadBubble key={i} turn={turn} />
+        ))}
+        {message.status === 'enviado' && (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', background: '#f1f5f9', padding: '4px 12px', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+              Aguardando resposta do corretor
+            </span>
+          </div>
+        )}
+        {message.status === 'encerrado' && (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', background: '#f1f5f9', padding: '4px 12px', borderRadius: 20, border: '1px solid #e2e8f0' }}>
+              Conversa encerrada
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Reply footer */}
+      {message.status !== 'encerrado' && (
+        <div style={{ padding: '14px 22px', borderTop: '1px solid #f1f5f9', flexShrink: 0, background: '#fff' }}>
+          <button
+            onClick={onNewMessage}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+              fontFamily: 'var(--font-sora, Sora, sans-serif)',
+              background: 'linear-gradient(135deg, #1a3470, #2563EB)',
+              color: '#fff', border: 'none', cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
+            }}
+          >
+            <Send style={{ width: 13, height: 13 }} />
+            Responder / Nova mensagem
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -313,6 +377,7 @@ function MessageRow({ message }: { message: typeof mockMessages[0] }) {
 // ── Page ──────────────────────────────────────────────────────────
 export default function AtendimentoPage() {
   const [showModal, setShowModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
 
   const waLink = `https://wa.me/55${mockBroker.whatsapp.replace(/\D/g, '')}`;
 
@@ -327,10 +392,9 @@ export default function AtendimentoPage() {
     [...mockMessages].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     []);
 
-  // Is broker available right now? (weekday 9–18h BRT)
   const isAvailable = (() => {
     const now = new Date();
-    const day = now.getDay(); // 0=sun,6=sat
+    const day = now.getDay();
     const hour = now.getHours();
     return day >= 1 && day <= 5 && hour >= 9 && hour < 18;
   })();
@@ -344,71 +408,30 @@ export default function AtendimentoPage() {
         {/* ── Hero ─────────────────────────────────────────────── */}
         <div
           className="relative overflow-hidden rounded-2xl"
-          style={{
-            marginBottom: 32,
-            background: 'linear-gradient(135deg, #0f1f45 0%, #1a3470 40%, #2563EB 100%)',
-            boxShadow: '0 4px 24px rgba(15,31,69,0.18)',
-          }}
+          style={{ marginBottom: 32, background: 'linear-gradient(135deg, #0f1f45 0%, #1a3470 40%, #2563EB 100%)', boxShadow: '0 4px 24px rgba(15,31,69,0.18)' }}
         >
-          <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full"
-            style={{ border: '32px solid rgba(255,255,255,0.04)' }} />
-          <div className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 h-32 w-32 rounded-full"
-            style={{ border: '20px solid rgba(255,255,255,0.03)' }} />
-          <div className="pointer-events-none absolute left-1/3 -bottom-8 h-36 w-36 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)' }} />
-
+          <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full" style={{ border: '32px solid rgba(255,255,255,0.04)' }} />
+          <div className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 h-32 w-32 rounded-full" style={{ border: '20px solid rgba(255,255,255,0.03)' }} />
+          <div className="pointer-events-none absolute left-1/3 -bottom-8 h-36 w-36 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)' }} />
           <div className="relative" style={{ padding: '36px 40px' }}>
-            <div style={{
-              marginBottom: 16,
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              borderRadius: 100, padding: '5px 12px',
-              background: 'rgba(255,255,255,0.10)',
-              border: '1px solid rgba(255,255,255,0.15)',
-            }}>
+            <div style={{ marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 100, padding: '5px 12px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' }}>
               <Headphones style={{ width: 11, height: 11, color: 'rgba(255,255,255,0.7)' }} />
-              <span style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
-                textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)',
-                fontFamily: 'var(--font-sora, Sora, sans-serif)',
-              }}>
-                Atendimento
-              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-sora, Sora, sans-serif)' }}>Atendimento</span>
             </div>
-
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
               <div>
-                <h1 style={{
-                  fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                  fontSize: 'clamp(1.6rem, 3vw, 2.25rem)',
-                  fontWeight: 700, letterSpacing: '-0.03em',
-                  color: '#ffffff', lineHeight: 1.1,
-                }}>
+                <h1 style={{ fontFamily: 'var(--font-sora, Sora, sans-serif)', fontSize: 'clamp(1.6rem, 3vw, 2.25rem)', fontWeight: 700, letterSpacing: '-0.03em', color: '#ffffff', lineHeight: 1.1 }}>
                   Fale com seu Corretor
                 </h1>
-                <p style={{
-                  marginTop: 10, fontSize: 14,
-                  color: 'rgba(255,255,255,0.55)',
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)',
-                  lineHeight: 1.6,
-                }}>
+                <p style={{ marginTop: 10, fontSize: 14, color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-inter, Inter, sans-serif)', lineHeight: 1.6 }}>
                   {stats.respondido > 0
                     ? <><span style={{ color: '#fbbf24', fontWeight: 600 }}>{stats.respondido} mensage{stats.respondido > 1 ? 'ns' : 'm'} respondida{stats.respondido > 1 ? 's' : ''}</span> — verifique as respostas do seu corretor.</>
                     : 'Envie mensagens e acompanhe os protocolos de atendimento.'}
                 </p>
               </div>
-
               <button
                 onClick={() => setShowModal(true)}
-                style={{
-                  flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 8,
-                  borderRadius: 12, padding: '10px 20px',
-                  fontSize: 13, fontWeight: 700,
-                  background: 'rgba(255,255,255,0.95)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  color: '#1a3470', cursor: 'pointer',
-                  fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                  transition: 'background 0.15s',
-                }}
+                style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 12, padding: '10px 20px', fontSize: 13, fontWeight: 700, background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(255,255,255,0.3)', color: '#1a3470', cursor: 'pointer', fontFamily: 'var(--font-sora, Sora, sans-serif)', transition: 'background 0.15s' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#ffffff'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.95)'; }}
               >
@@ -424,71 +447,26 @@ export default function AtendimentoPage() {
 
           {/* ── LEFT: Broker card ──────────────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Broker profile */}
-            <div style={{
-              background: '#fff', borderRadius: 16,
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              overflow: 'hidden',
-            }}>
-              {/* Header band */}
-              <div style={{
-                height: 56,
-                background: 'linear-gradient(135deg, #0f1f45 0%, #2563EB 100%)',
-              }} />
-
-              {/* Avatar + info */}
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+              <div style={{ height: 56, background: 'linear-gradient(135deg, #0f1f45 0%, #2563EB 100%)' }} />
               <div style={{ padding: '0 22px 22px', marginTop: -28 }}>
-                {/* Avatar */}
-                <div style={{
-                  width: 56, height: 56, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #1a3470, #2563EB)',
-                  border: '3px solid #fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
-                  marginBottom: 10,
-                }}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.02em' }}>
-                    TA
-                  </span>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #1a3470, #2563EB)', border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(37,99,235,0.25)', marginBottom: 10 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.02em' }}>TA</span>
                 </div>
-
-                {/* Name + role */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.02em' }}>
-                      {mockBroker.name}
-                    </p>
-                    {/* Online indicator */}
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.02em' }}>{mockBroker.name}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, background: isAvailable ? 'rgba(16,185,129,0.10)' : 'rgba(100,116,139,0.08)', border: `1px solid ${isAvailable ? 'rgba(16,185,129,0.25)' : 'rgba(100,116,139,0.18)'}` }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: isAvailable ? '#10B981' : '#94A3B8' }} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: isAvailable ? '#059669' : '#64748B', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em' }}>
-                        {isAvailable ? 'Disponível' : 'Ausente'}
-                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: isAvailable ? '#059669' : '#64748B', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em' }}>{isAvailable ? 'Disponível' : 'Ausente'}</span>
                     </div>
                   </div>
-                  <p style={{ fontSize: 12, color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-                    {mockBroker.role}
-                  </p>
+                  <p style={{ fontSize: 12, color: '#64748b', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>{mockBroker.role}</p>
                 </div>
-
-                {/* Divider */}
                 <div style={{ height: 1, background: '#f1f5f9', marginBottom: 14 }} />
-
-                {/* Contact channels */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* WhatsApp */}
-                  <a
-                    href={waLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', borderRadius: 10, textDecoration: 'none',
-                      background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.18)',
-                      transition: 'all 0.15s',
-                    }}
+                  <a href={waLink} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.18)', transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,197,94,0.14)'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,197,94,0.07)'; }}
                   >
@@ -496,25 +474,13 @@ export default function AtendimentoPage() {
                       <WhatsAppSvg style={{ width: 15, height: 15, color: '#16a34a' }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>
-                        WhatsApp
-                      </p>
-                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>
-                        {mockBroker.whatsapp}
-                      </p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>WhatsApp</p>
+                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>{mockBroker.whatsapp}</p>
                     </div>
                     <ExternalLink style={{ width: 12, height: 12, color: '#94a3b8', marginLeft: 'auto', flexShrink: 0 }} />
                   </a>
-
-                  {/* Email */}
-                  <a
-                    href={`mailto:${mockBroker.email}`}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', borderRadius: 10, textDecoration: 'none',
-                      background: '#f8fafc', border: '1px solid #f1f5f9',
-                      transition: 'all 0.15s',
-                    }}
+                  <a href={`mailto:${mockBroker.email}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f1f5f9'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
                   >
@@ -522,24 +488,12 @@ export default function AtendimentoPage() {
                       <Mail style={{ width: 14, height: 14, color: '#2563EB' }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>
-                        E-mail
-                      </p>
-                      <p style={{ fontSize: 11, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {mockBroker.email}
-                      </p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>E-mail</p>
+                      <p style={{ fontSize: 11, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mockBroker.email}</p>
                     </div>
                   </a>
-
-                  {/* Phone */}
-                  <a
-                    href={`tel:${mockBroker.phone}`}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', borderRadius: 10, textDecoration: 'none',
-                      background: '#f8fafc', border: '1px solid #f1f5f9',
-                      transition: 'all 0.15s',
-                    }}
+                  <a href={`tel:${mockBroker.phone}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f1f5f9'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
                   >
@@ -547,50 +501,23 @@ export default function AtendimentoPage() {
                       <Phone style={{ width: 14, height: 14, color: '#2563EB' }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>
-                        Telefone
-                      </p>
-                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>
-                        {mockBroker.phone}
-                      </p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>Telefone</p>
+                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>{mockBroker.phone}</p>
                     </div>
                   </a>
-
-                  {/* Working hours */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 12px', borderRadius: 10,
-                    background: '#f8fafc', border: '1px solid #f1f5f9',
-                  }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: '#f8fafc', border: '1px solid #f1f5f9' }}>
                     <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(100,116,139,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Clock style={{ width: 14, height: 14, color: '#64748b' }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>
-                        Horário
-                      </p>
-                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>
-                        {mockBroker.workingHours}
-                      </p>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', fontFamily: 'var(--font-sora)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 1 }}>Horário</p>
+                      <p style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-inter, Inter, sans-serif)', fontWeight: 500 }}>{mockBroker.workingHours}</p>
                     </div>
                   </div>
                 </div>
-
-                {/* Divider */}
                 <div style={{ height: 1, background: '#f1f5f9', margin: '16px 0 14px' }} />
-
-                {/* CTA button */}
-                <button
-                  onClick={() => setShowModal(true)}
-                  style={{
-                    width: '100%', padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                    fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                    background: 'linear-gradient(135deg, #1a3470, #2563EB)',
-                    color: '#fff', border: 'none', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                    boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
-                  }}
-                >
+                <button onClick={() => setShowModal(true)}
+                  style={{ width: '100%', padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: 'linear-gradient(135deg, #1a3470, #2563EB)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
                   <MessageSquarePlus style={{ width: 14, height: 14 }} />
                   Enviar mensagem
                 </button>
@@ -598,15 +525,8 @@ export default function AtendimentoPage() {
             </div>
 
             {/* Stats mini card */}
-            <div style={{
-              background: '#fff', borderRadius: 14,
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              padding: '16px 20px',
-            }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', fontFamily: 'var(--font-sora)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12 }}>
-                Resumo
-              </p>
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px 20px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', fontFamily: 'var(--font-sora)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12 }}>Resumo</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
                   { label: 'Protocolos totais',  value: stats.total,      color: '#0f172a' },
@@ -623,74 +543,57 @@ export default function AtendimentoPage() {
             </div>
           </div>
 
-          {/* ── RIGHT: Inbox ────────────────────────────────────── */}
+          {/* ── RIGHT: Inbox or Thread ───────────────────────────── */}
           <div style={{
             background: '#fff', borderRadius: 16,
             border: '1px solid #e2e8f0',
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             overflow: 'hidden',
+            minHeight: 500,
+            display: 'flex', flexDirection: 'column',
           }}>
-            {/* Inbox header */}
-            <div style={{
-              padding: '16px 22px',
-              borderBottom: '1px solid #f1f5f9',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em', marginBottom: 2 }}>
-                  Histórico de mensagens
-                </p>
-                <p style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-                  {stats.total} protocolo{stats.total !== 1 ? 's' : ''} · {stats.respondido} não lido{stats.respondido !== 1 ? 's' : ''}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(true)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                  fontFamily: 'var(--font-sora, Sora, sans-serif)',
-                  background: 'rgba(37,99,235,0.07)', color: '#2563EB',
-                  border: '1px solid rgba(37,99,235,0.18)', cursor: 'pointer',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.13)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.07)'; }}
-              >
-                <MessageSquarePlus style={{ width: 13, height: 13 }} />
-                Nova
-              </button>
-            </div>
-
-            {/* Message list */}
-            {sorted.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-                <Headphones style={{ width: 40, height: 40, color: '#cbd5e1', margin: '0 auto 12px' }} />
-                <p style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', marginBottom: 4 }}>
-                  Nenhuma mensagem ainda
-                </p>
-                <p style={{ fontSize: 13, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-                  Envie uma mensagem para seu corretor.
-                </p>
-              </div>
+            {selectedMessage ? (
+              <ThreadView
+                message={selectedMessage}
+                onBack={() => setSelectedMessage(null)}
+                onNewMessage={() => setShowModal(true)}
+              />
             ) : (
-              <div>
-                {sorted.map(msg => (
-                  <MessageRow key={msg.id} message={msg} />
-                ))}
-              </div>
-            )}
+              <>
+                {/* Inbox header */}
+                <div style={{ padding: '16px 22px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-sora, Sora, sans-serif)', letterSpacing: '-0.01em', marginBottom: 2 }}>Histórico de mensagens</p>
+                    <p style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+                      {stats.total} protocolo{stats.total !== 1 ? 's' : ''} · clique para ver a conversa
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-sora, Sora, sans-serif)', background: 'rgba(37,99,235,0.07)', color: '#2563EB', border: '1px solid rgba(37,99,235,0.18)', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.13)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.07)'; }}
+                  >
+                    <MessageSquarePlus style={{ width: 13, height: 13 }} />
+                    Nova
+                  </button>
+                </div>
 
-            {/* Footer note */}
-            <div style={{
-              padding: '12px 22px',
-              borderTop: '1px solid #f8fafc',
-              background: '#fafbfc',
-            }}>
-              <p style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', textAlign: 'center' }}>
-                Tempo médio de resposta: <span style={{ fontWeight: 600, color: '#64748b' }}>até 1 dia útil</span>
-              </p>
-            </div>
+                {/* Message list */}
+                <div style={{ flex: 1 }}>
+                  {sorted.map(msg => (
+                    <MessageRow key={msg.id} message={msg} onClick={() => setSelectedMessage(msg)} />
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div style={{ padding: '12px 22px', borderTop: '1px solid #f8fafc', background: '#fafbfc', flexShrink: 0 }}>
+                  <p style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-inter, Inter, sans-serif)', textAlign: 'center' }}>
+                    Tempo médio de resposta: <span style={{ fontWeight: 600, color: '#64748b' }}>até 1 dia útil</span>
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

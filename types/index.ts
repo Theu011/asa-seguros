@@ -180,6 +180,12 @@ export interface Broker {
 // ── Message / Protocol ──────────────────────────────────────────
 export type MessageStatus = 'enviado' | 'respondido' | 'encerrado';
 
+export interface MessageTurn {
+  from: 'client' | 'broker';
+  date: string;
+  body: string;
+}
+
 export interface Message {
   id: string;
   protocol: string;
@@ -189,4 +195,5 @@ export interface Message {
   preview: string;
   from: 'client' | 'broker';
   policyId?: string;
+  thread: MessageTurn[];
 }
