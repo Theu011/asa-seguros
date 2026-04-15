@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import {
   Car, Home, Heart, Building2, Plane,
-  RefreshCw, MessageCircle, FileText,
+  RefreshCw, FileText,
   ChevronRight, TrendingUp, TrendingDown,
   Minus, CheckCircle2, Clock, AlertTriangle,
   X, CalendarDays,
@@ -400,7 +400,7 @@ export default function RenovacoesPage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.20)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; }}
             >
-              <MessageCircle style={{ width: 15, height: 15 }} />
+              <WhatsAppSvg style={{ width: 15, height: 15 }} />
               Falar com corretor
             </a>
           </div>
